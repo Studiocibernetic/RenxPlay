@@ -77,6 +77,33 @@ function ensureGameColumns(PDO $pdo): void {
 
 ensureGameColumns($pdo);
 
+// Migração do campo engine para novos valores padronizados
+function migrateEngineEnum(PDO $pdo): void {
+    try {
+        $stmt = $pdo->query("SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '" . DB_NAME . "' AND TABLE_NAME = 'games' AND COLUMN_NAME = 'engine'");
+        $colType = $stmt->fetchColumn();
+        if (!$colType) return;
+
+        $needsNew = !(strpos($colType, "'RENPY'") !== false && strpos($colType, "'UNREAL'") !== false && strpos($colType, "'RPGM'") !== false && strpos($colType, "'OUTROS'") !== false && strpos($colType, "'HTML'") !== false);
+        if (!$needsNew) return; // já está no novo formato
+
+        // 1) Permitir valores antigos e novos simultaneamente para migrar dados
+        $pdo->exec("ALTER TABLE games MODIFY engine ENUM('RENPY','UNITY','UNREAL','RPGM','OUTROS','HTML','REN\\'PY','RPG_MAKER','OTHER') NOT NULL DEFAULT 'RENPY'");
+
+        // 2) Migrar dados antigos para os novos códigos
+        $pdo->exec("UPDATE games SET engine='RENPY' WHERE engine IN ('REN\\'PY','REN&#039;PY','REN_PY')");
+        $pdo->exec("UPDATE games SET engine='RPGM' WHERE engine='RPG_MAKER'");
+        $pdo->exec("UPDATE games SET engine='OUTROS' WHERE engine='OTHER'");
+
+        // 3) Remover valores antigos do ENUM
+        $pdo->exec("ALTER TABLE games MODIFY engine ENUM('RENPY','UNITY','UNREAL','RPGM','OUTROS','HTML') NOT NULL DEFAULT 'RENPY'");
+    } catch (Throwable $e) {
+        error_log('migrateEngineEnum error: ' . $e->getMessage());
+    }
+}
+
+migrateEngineEnum($pdo);
+
 // ====== FUNÇÕES DE AUTENTICAÇÃO MELHORADAS ======
 function isLoggedIn() { 
     return isset($_SESSION['user']) && !empty($_SESSION['user']['id']); 
@@ -481,6 +508,61 @@ function timeAgo($datetime, $full = false) {
 
 function sanitize($text) {
     return htmlspecialchars(trim($text), ENT_QUOTES, 'UTF-8');
+}
+
+// ====== ENGINE HELPERS ======
+/**
+ * Normaliza valores de engine vindos do formulário/banco para códigos estáveis.
+ * Códigos válidos: RENPY, UNITY, UNREAL, RPGM, OUTROS, HTML
+ */
+function normalizeEngine($value) {
+    $v = trim((string)$value);
+    $vUpper = strtoupper(str_replace([' ', '-', '_', '\\'], ['', '', '', ''], html_entity_decode($v, ENT_QUOTES, 'UTF-8')));
+
+    // Mapeamento de valores antigos/variantes
+    $map = [
+        "RENPY" => ['RENPY', "REN'PY", 'REN&#039;PY', 'REN_PY'],
+        "UNITY" => ['UNITY'],
+        "UNREAL" => ['UNREAL', 'UNREALENGINE', 'UNREALENGINE4', 'UNREALENGINE5'],
+        "RPGM" => ['RPGM', 'RPGMAKER', 'RPG_MAKER'],
+        "OUTROS" => ['OUTROS', 'OUTRO', 'OTHER', 'OTHERS'],
+        "HTML" => ['HTML', 'WEB', 'BROWSER']
+    ];
+
+    foreach ($map as $code => $aliases) {
+        if (in_array($vUpper, $aliases, true)) return $code;
+    }
+    // Padrão seguro
+    return 'RENPY';
+}
+
+/**
+ * Retorna o rótulo amigável para o código da engine.
+ */
+function getEngineLabel($code) {
+    switch (normalizeEngine($code)) {
+        case 'UNITY': return 'Unity';
+        case 'UNREAL': return 'Unreal Engine';
+        case 'RPGM': return 'Rpgm';
+        case 'OUTROS': return 'Outros';
+        case 'HTML': return 'HTML';
+        case 'RENPY':
+        default: return "Ren'Py";
+    }
+}
+
+/**
+ * Opções canônicas de engine na ordem desejada [codigo => label].
+ */
+function getEngineOptions() {
+    return [
+        'RENPY' => "Ren'Py",
+        'UNITY' => 'Unity',
+        'UNREAL' => 'Unreal Engine',
+        'RPGM' => 'Rpgm',
+        'OUTROS' => 'Outros',
+        'HTML' => 'HTML',
+    ];
 }
 
 function validateURL($url) {
