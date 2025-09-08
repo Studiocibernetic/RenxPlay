@@ -99,7 +99,7 @@ if ($action === 'create_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $cover,
             sanitize($_POST['language'] ?? ''), // legacy single
             sanitize($_POST['version']),
-            sanitize($_POST['engine']),
+            normalizeEngine($_POST['engine'] ?? ''),
             sanitize($_POST['tags'] ?? ''),
             sanitize($_POST['download_url'] ?? ''),
             sanitize($_POST['download_url_windows'] ?? ''),
@@ -183,7 +183,7 @@ if ($action === 'update_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $cover,
         sanitize($_POST['language'] ?? ''),
         sanitize($_POST['version']),
-        sanitize($_POST['engine']),
+        normalizeEngine($_POST['engine'] ?? ''),
         sanitize($_POST['tags'] ?? ''),
         sanitize($_POST['download_url'] ?? ''),
         sanitize($_POST['download_url_windows'] ?? ''),
@@ -406,10 +406,9 @@ if ($action === 'delete_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="form-group">
                                 <label for="engine">Engine</label>
                                 <select id="engine" name="engine" required>
-                                    <option value="REN'PY" <?= ($_POST['engine'] ?? '') === "REN'PY" ? 'selected' : '' ?>>REN'PY</option>
-                                    <option value="UNITY" <?= ($_POST['engine'] ?? '') === 'UNITY' ? 'selected' : '' ?>>Unity</option>
-                                    <option value="RPG_MAKER" <?= ($_POST['engine'] ?? '') === 'RPG_MAKER' ? 'selected' : '' ?>>RPG Maker</option>
-                                    <option value="OTHER" <?= ($_POST['engine'] ?? '') === 'OTHER' ? 'selected' : '' ?>>Outro</option>
+                                    <?php foreach (getEngineOptions() as $code => $label): ?>
+                                        <option value="<?= $code ?>" <?= normalizeEngine($_POST['engine'] ?? '') === $code ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
@@ -587,10 +586,9 @@ if ($action === 'delete_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="form-group"><label>Título</label><input type="text" name="title" value="<?= htmlspecialchars($eg['title']) ?>"/></div>
                             <div class="form-group"><label>Engine</label>
                                 <select name="engine">
-                                    <option value="REN'PY" <?= $eg['engine']==="REN'PY"?'selected':'' ?>>REN'PY</option>
-                                    <option value="UNITY" <?= $eg['engine']==='UNITY'?'selected':'' ?>>UNITY</option>
-                                    <option value="RPG_MAKER" <?= $eg['engine']==='RPG_MAKER'?'selected':'' ?>>RPG_MAKER</option>
-                                    <option value="OTHER" <?= $eg['engine']==='OTHER'?'selected':'' ?>>OTHER</option>
+                                    <?php foreach (getEngineOptions() as $code => $label): ?>
+                                        <option value="<?= $code ?>" <?= normalizeEngine($eg['engine'] ?? '') === $code ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>

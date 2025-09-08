@@ -46,7 +46,7 @@ CREATE TABLE `games` (
   `language` varchar(50) DEFAULT 'English',
   `languages_multi` text NULL DEFAULT NULL COMMENT 'JSON array of supported languages',
   `version` varchar(50) DEFAULT 'v1.0',
-  `engine` enum('REN\'PY','UNITY','RPG_MAKER','OTHER') NOT NULL DEFAULT 'REN\'PY',
+  `engine` enum('RENPY','UNITY','UNREAL','RPGM','OUTROS','HTML') NOT NULL DEFAULT 'RENPY',
   `tags` text NULL DEFAULT NULL,
   `download_url` varchar(500) NULL DEFAULT NULL,
   `download_url_windows` varchar(500) NULL DEFAULT NULL,

@@ -108,7 +108,7 @@ renderHeader($game['title']);
             <h1><?= htmlspecialchars($game['title']) ?></h1>
 
             <div class="game-badges">
-                <span class="badge"><?= htmlspecialchars(html_entity_decode($game['engine'] ?? "REN'PY")) ?></span>
+                <span class="badge"><?= htmlspecialchars(getEngineLabel($game['engine'] ?? 'RENPY')) ?></span>
                 <span class="badge"><?= htmlspecialchars($game['version'] ?? 'v1.0') ?></span>
                 <span class="badge"><?= htmlspecialchars($game['author']) ?></span>
             </div>

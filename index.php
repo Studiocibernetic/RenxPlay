@@ -57,8 +57,8 @@ renderHeader('', 'Lista de jogos', 'jogos, renpy, visual novel');
                             <h3 class="card-title"><?= htmlspecialchars($g['title']) ?></h3>
                             
                             <div class="card-meta">
-                                <span class="badge">REN'PY</span>
-                                <span>v1.0</span>
+                                <span class="badge"><?= htmlspecialchars(getEngineLabel($g['engine'] ?? 'RENPY')) ?></span>
+                                <span><?= htmlspecialchars($g['version'] ?? 'v1.0') ?></span>
                                 
                                 <div class="card-rating">
                                     <i class="fas fa-star"></i>
