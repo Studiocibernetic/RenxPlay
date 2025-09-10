@@ -8,7 +8,14 @@ if (strlen($q) < 2) {
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT slug, title, cover_image, category, downloads_count FROM games WHERE title LIKE ? LIMIT 8");
+$stmt = $pdo->prepare("SELECT slug, titulo, imagem_capa, categoria, downloads_total FROM jogos WHERE titulo LIKE ? LIMIT 8");
 $stmt->execute(['%' . $q . '%']);
-echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+// Adaptar as chaves esperadas no frontend (index.js embutido)
+$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+foreach ($rows as &$r) {
+    // manter compatibilidade onde esperado
+    $r['title'] = $r['titulo'] ?? $r['title'] ?? '';
+}
+unset($r);
+echo json_encode($rows);
 ?>

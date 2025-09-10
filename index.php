@@ -30,14 +30,14 @@ renderHeader('', 'Lista de jogos', 'jogos, renpy, visual novel');
     $page = max(1, (int)($_GET['p'] ?? 1));
     $offset = ($page - 1) * POSTS_PER_PAGE;
 
-    $sql = "SELECT * FROM games ORDER BY created_at DESC LIMIT ? OFFSET ?";
+    $sql = "SELECT * FROM jogos ORDER BY criado_em DESC LIMIT ? OFFSET ?";
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(1, POSTS_PER_PAGE, PDO::PARAM_INT);
     $stmt->bindValue(2, $offset, PDO::PARAM_INT);
     $stmt->execute();
     $games = $stmt->fetchAll();
 
-    $total = $pdo->query("SELECT COUNT(*) FROM games")->fetchColumn();
+    $total = $pdo->query("SELECT COUNT(*) FROM jogos")->fetchColumn();
     $pages = ceil($total / POSTS_PER_PAGE);
 
     if (empty($games)): ?>
@@ -50,11 +50,11 @@ renderHeader('', 'Lista de jogos', 'jogos, renpy, visual novel');
                 <a href="game.php?slug=<?= urlencode($g['slug']) ?>" style="text-decoration: none; color: inherit;">
                     <div class="card">
                         <div class="card-image">
-                            <?= renderImageTag('uploads/covers/' . $g['cover_image'], $g['title'], ['loading' => 'lazy']) ?>
+                            <?= renderImageTag('uploads/covers/' . $g['imagem_capa'], $g['titulo'], ['loading' => 'lazy']) ?>
                         </div>
                         
                         <div class="card-content">
-                            <h3 class="card-title"><?= htmlspecialchars($g['title']) ?></h3>
+                            <h3 class="card-title"><?= htmlspecialchars($g['titulo']) ?></h3>
                             
                             <div class="card-meta">
                                 <span class="badge">REN'PY</span>
@@ -67,7 +67,7 @@ renderHeader('', 'Lista de jogos', 'jogos, renpy, visual novel');
                             </div>
                             
                             <p class="card-description">
-                                <?= htmlspecialchars(substr($g['description'], 0, 100)) ?>...
+                                <?= htmlspecialchars(substr($g['descricao'], 0, 100)) ?>...
                             </p>
                             
                             <?php if (!empty($g['tags'])): ?>
@@ -89,12 +89,12 @@ renderHeader('', 'Lista de jogos', 'jogos, renpy, visual novel');
                             <div class="card-footer">
                                 <div style="display: flex; align-items: center; gap: 0.25rem;">
                                     <i class="fas fa-calendar"></i>
-                                    <span><?= date('d/m/Y', strtotime($g['created_at'])) ?></span>
+                                    <span><?= date('d/m/Y', strtotime($g['criado_em'])) ?></span>
                                 </div>
                                 
                                 <div class="btn btn-sm btn-outline">
                                     <i class="fas fa-download"></i>
-                                    Download
+                                    Baixar
                                 </div>
                             </div>
                         </div>
@@ -133,7 +133,7 @@ renderHeader('', 'Lista de jogos', 'jogos, renpy, visual novel');
           results.innerHTML = games.map(game => 
             `<a href="game.php?slug=${game.slug}" style="display: block; padding: 0.75rem 1rem; text-decoration: none; color: hsl(var(--foreground)); border-bottom: 1px solid hsl(var(--border)); transition: background 0.2s;" onmouseover="this.style.background='hsl(var(--accent))'" onmouseout="this.style.background='transparent'">
                 <strong>${game.title}</strong><br>
-                <small style="color: hsl(var(--muted-foreground));">${game.category || 'Visual Novel'} • ${game.downloads_count || 0} downloads</small>
+                <small style="color: hsl(var(--muted-foreground));">${game.categoria || 'Visual Novel'} • ${game.downloads_total || 0} downloads</small>
             </a>`
           ).join('');
         }

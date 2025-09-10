@@ -5,8 +5,8 @@ date_default_timezone_set('America/Sao_Paulo');
 
 function canModerateComments(int $postOwnerId): bool {
     return isLoggedIn() && (
-        $_SESSION['user']['role'] === 'DEV'
-        || $_SESSION['user']['role'] === 'SUPER_ADMIN'
+        $_SESSION['user']['papel'] === 'DEV'
+        || $_SESSION['user']['papel'] === 'SUPER_ADMIN'
         || $_SESSION['user']['id'] === $postOwnerId
     );
 }
@@ -17,7 +17,7 @@ if (!$gameSlug) {
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT g.*, u.username AS author FROM games g JOIN users u ON g.posted_by=u.id WHERE g.slug = ?");
+$stmt = $pdo->prepare("SELECT g.*, u.nome_usuario AS author FROM jogos g JOIN usuarios u ON g.publicado_por=u.id WHERE g.slug = ?");
 $stmt->execute([$gameSlug]);
 $game = $stmt->fetch();
 
@@ -27,7 +27,7 @@ if (!$game) {
 }
 
 $gameId = (int)$game['id'];
-$postOwner = (int)$game['posted_by'];
+$postOwner = (int)$game['publicado_por'];
 
 if (isLoggedIn() && isset($_POST['action'])) {
     $gameIdPost = (int)($_POST['game_id'] ?? 0);
@@ -36,7 +36,7 @@ if (isLoggedIn() && isset($_POST['action'])) {
         exit;
     }
 
-    $owner = $pdo->prepare("SELECT posted_by FROM games WHERE id = ?");
+    $owner = $pdo->prepare("SELECT publicado_por FROM jogos WHERE id = ?");
     $owner->execute([$gameIdPost]);
     $postOwner = (int)$owner->fetchColumn();
 
@@ -46,7 +46,7 @@ if (isLoggedIn() && isset($_POST['action'])) {
     }
 
     if ($_POST['action'] === 'comment' && !empty($_POST['comment'])) {
-        $pdo->prepare("INSERT INTO comments (game_id, user_id, comment, parent_id, created_at) VALUES (?,?,?,?,NOW())")
+        $pdo->prepare("INSERT INTO comentarios (jogo_id, usuario_id, comentario, pai_id, criado_em) VALUES (?,?,?,?,NOW())")
             ->execute([
                 $gameIdPost,
                 $_SESSION['user']['id'],
@@ -54,19 +54,19 @@ if (isLoggedIn() && isset($_POST['action'])) {
                 !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : null
             ]);
     } elseif ($_POST['action'] === 'edit_comment' && !empty($_POST['comment_id']) && !empty($_POST['comment'])) {
-        $c = $pdo->prepare("SELECT * FROM comments WHERE id=?");
+        $c = $pdo->prepare("SELECT * FROM comentarios WHERE id=?");
         $c->execute([(int)$_POST['comment_id']]);
         $comment = $c->fetch();
-        if ($comment && ($comment['user_id'] === $_SESSION['user']['id'] || canModerateComments($postOwner))) {
-            $pdo->prepare("UPDATE comments SET comment=?, edited_at=NOW() WHERE id=?")
+        if ($comment && ($comment['usuario_id'] === $_SESSION['user']['id'] || canModerateComments($postOwner))) {
+            $pdo->prepare("UPDATE comentarios SET comentario=?, editado_em=NOW() WHERE id=?")
                 ->execute([trim($_POST['comment']), (int)$_POST['comment_id']]);
         }
     } elseif ($_POST['action'] === 'delete_comment' && !empty($_POST['comment_id'])) {
-        $c = $pdo->prepare("SELECT * FROM comments WHERE id=?");
+        $c = $pdo->prepare("SELECT * FROM comentarios WHERE id=?");
         $c->execute([(int)$_POST['comment_id']]);
         $comment = $c->fetch();
-        if ($comment && ($comment['user_id'] === $_SESSION['user']['id'] || canModerateComments($postOwner))) {
-            $pdo->prepare("UPDATE comments SET deleted_at=NOW() WHERE id=?")
+        if ($comment && ($comment['usuario_id'] === $_SESSION['user']['id'] || canModerateComments($postOwner))) {
+            $pdo->prepare("UPDATE comentarios SET excluido_em=NOW() WHERE id=?")
                 ->execute([(int)$_POST['comment_id']]);
         }
     }
@@ -76,17 +76,17 @@ if (isLoggedIn() && isset($_POST['action'])) {
 }
 
 if (isset($_GET['download']) && isLoggedIn()) {
-    $pdo->prepare("UPDATE games SET downloads_count = downloads_count + 1 WHERE id = ?")
+    $pdo->prepare("UPDATE jogos SET downloads_total = downloads_total + 1 WHERE id = ?")
         ->execute([ $_GET['download'] ]);
     echo "<script>window.close();</script>";
     exit;
 }
 
-$cTotal = $pdo->prepare("SELECT COUNT(*) FROM comments WHERE game_id=? AND deleted_at IS NULL");
+$cTotal = $pdo->prepare("SELECT COUNT(*) FROM comentarios WHERE jogo_id=? AND excluido_em IS NULL");
 $cTotal->execute([$gameId]);
 $totalComments = (int)$cTotal->fetchColumn();
 
-renderHeader($game['title']);
+renderHeader($game['titulo']);
 ?>
 
 <!-- Botão voltar -->
@@ -101,15 +101,15 @@ renderHeader($game['title']);
 <div class="game-detail">
     <div class="game-header">
         <div class="game-image">
-            <?= renderImageTag('uploads/covers/' . $game['cover_image'], $game['title']) ?>
+            <?= renderImageTag('uploads/covers/' . $game['imagem_capa'], $game['titulo']) ?>
         </div>
 
         <div class="game-info">
-            <h1><?= htmlspecialchars($game['title']) ?></h1>
+            <h1><?= htmlspecialchars($game['titulo']) ?></h1>
 
             <div class="game-badges">
-                <span class="badge"><?= htmlspecialchars(html_entity_decode($game['engine'] ?? "REN'PY")) ?></span>
-                <span class="badge"><?= htmlspecialchars($game['version'] ?? 'v1.0') ?></span>
+                <span class="badge"><?= htmlspecialchars(html_entity_decode($game['motor'] ?? "REN'PY")) ?></span>
+                <span class="badge"><?= htmlspecialchars($game['versao'] ?? 'v1.0') ?></span>
                 <span class="badge"><?= htmlspecialchars($game['author']) ?></span>
             </div>
 
@@ -119,38 +119,38 @@ renderHeader($game['title']);
             </div>
 
             <div style="margin-bottom: .75rem;">
-                <?php $langs = !empty($game['languages_multi']) ? json_decode($game['languages_multi'], true) : []; ?>
+                <?php $langs = !empty($game['idiomas_multiplos']) ? json_decode($game['idiomas_multiplos'], true) : []; ?>
                 <p><strong>Idiomas:</strong>
                     <?php if ($langs): ?>
                         <?= htmlspecialchars(implode(', ', $langs)) ?>
                     <?php else: ?>
-                        <?= htmlspecialchars($game['language'] ?? 'English') ?>
+                        <?= htmlspecialchars($game['idioma'] ?? 'Português') ?>
                     <?php endif; ?>
                 </p>
-                <?php if (!empty($game['developer_name'])): ?>
-                    <p><strong>Desenvolvedor:</strong> <?= htmlspecialchars($game['developer_name']) ?></p>
+                <?php if (!empty($game['nome_desenvolvedor'])): ?>
+                    <p><strong>Desenvolvedor:</strong> <?= htmlspecialchars($game['nome_desenvolvedor']) ?></p>
                 <?php endif; ?>
-                <p><strong>Censurado:</strong> <?= !empty($game['censored']) ? 'Sim' : 'Não' ?></p>
-                <?php if (!empty($game['released_at_custom'])): ?>
-                    <p><strong>Lançamento:</strong> <?= date('d/m/Y', strtotime($game['released_at_custom'])) ?></p>
+                <p><strong>Censurado:</strong> <?= !empty($game['censurado']) ? 'Sim' : 'Não' ?></p>
+                <?php if (!empty($game['lancado_em_personalizado'])): ?>
+                    <p><strong>Lançamento:</strong> <?= date('d/m/Y', strtotime($game['lancado_em_personalizado'])) ?></p>
                 <?php else: ?>
-                    <p><strong>Lançamento:</strong> <?= date('d/m/Y', strtotime($game['created_at'])) ?></p>
+                    <p><strong>Lançamento:</strong> <?= date('d/m/Y', strtotime($game['criado_em'])) ?></p>
                 <?php endif; ?>
-                <?php if (!empty($game['updated_at_custom'])): ?>
-                    <p><strong>Atualização:</strong> <?= date('d/m/Y', strtotime($game['updated_at_custom'])) ?></p>
+                <?php if (!empty($game['atualizado_em_personalizado'])): ?>
+                    <p><strong>Atualização:</strong> <?= date('d/m/Y', strtotime($game['atualizado_em_personalizado'])) ?></p>
                 <?php endif; ?>
             </div>
 
-            <?php if (!empty($game['patreon_url']) || !empty($game['discord_url']) || !empty($game['subscribestar_url']) || !empty($game['itch_url']) || !empty($game['kofi_url']) || !empty($game['bmc_url']) || !empty($game['steam_url'])): ?>
+            <?php if (!empty($game['url_patreon']) || !empty($game['url_discord']) || !empty($game['url_subscribestar']) || !empty($game['url_itch']) || !empty($game['url_kofi']) || !empty($game['url_bmc']) || !empty($game['url_steam'])): ?>
             <div class="download-section" style="margin-top:.5rem;">
                 <div class="creator-links">
-                    <?php if (!empty($game['patreon_url'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['patreon_url']) ?>"><i class="fab fa-patreon"></i> Patreon</a><?php endif; ?>
-                    <?php if (!empty($game['discord_url'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['discord_url']) ?>"><i class="fab fa-discord"></i> Discord</a><?php endif; ?>
-                    <?php if (!empty($game['subscribestar_url'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['subscribestar_url']) ?>"><i class="fas fa-star"></i> SubscribeStar</a><?php endif; ?>
-                    <?php if (!empty($game['itch_url'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['itch_url']) ?>"><i class="fas fa-gamepad"></i> itch.io</a><?php endif; ?>
-                    <?php if (!empty($game['kofi_url'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['kofi_url']) ?>"><i class="fas fa-mug-hot"></i> Ko-fi</a><?php endif; ?>
-                    <?php if (!empty($game['bmc_url'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['bmc_url']) ?>"><i class="fas fa-coffee"></i> Buy Me a Coffee</a><?php endif; ?>
-                    <?php if (!empty($game['steam_url'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['steam_url']) ?>"><i class="fab fa-steam"></i> Steam</a><?php endif; ?>
+                    <?php if (!empty($game['url_patreon'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['url_patreon']) ?>"><i class="fab fa-patreon"></i> Patreon</a><?php endif; ?>
+                    <?php if (!empty($game['url_discord'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['url_discord']) ?>"><i class="fab fa-discord"></i> Discord</a><?php endif; ?>
+                    <?php if (!empty($game['url_subscribestar'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['url_subscribestar']) ?>"><i class="fas fa-star"></i> SubscribeStar</a><?php endif; ?>
+                    <?php if (!empty($game['url_itch'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['url_itch']) ?>"><i class="fas fa-gamepad"></i> itch.io</a><?php endif; ?>
+                    <?php if (!empty($game['url_kofi'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['url_kofi']) ?>"><i class="fas fa-mug-hot"></i> Ko-fi</a><?php endif; ?>
+                    <?php if (!empty($game['url_bmc'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['url_bmc']) ?>"><i class="fas fa-coffee"></i> Buy Me a Coffee</a><?php endif; ?>
+                    <?php if (!empty($game['url_steam'])): ?><a class="btn btn-outline" target="_blank" href="<?= htmlspecialchars($game['url_steam']) ?>"><i class="fab fa-steam"></i> Steam</a><?php endif; ?>
                 </div>
             </div>
             <?php endif; ?>
@@ -159,26 +159,26 @@ renderHeader($game['title']);
 
     <?php if (isLoggedIn()): ?>
         <div class="download-section">
-            <h3><i class="fas fa-download"></i> Selecionar Plataforma:</h3>
+            <h3><i class="fas fa-download"></i> Selecionar plataforma:</h3>
             <div class="download-buttons">
-                <?php if (!empty($game['download_url_windows'])): ?>
-                    <a href="<?= htmlspecialchars($game['download_url_windows']) ?>" target="_blank" class="btn btn-download">
+                <?php if (!empty($game['url_download_windows'])): ?>
+                    <a href="<?= htmlspecialchars($game['url_download_windows']) ?>" target="_blank" class="btn btn-download">
                         <i class="fab fa-windows"></i>
                         Windows
                     </a>
                 <?php endif; ?>
 
-                <?php if (!empty($game['download_url_android'])): ?>
-                    <a href="<?= htmlspecialchars($game['download_url_android']) ?>" target="_blank" class="btn btn-download">
+                <?php if (!empty($game['url_download_android'])): ?>
+                    <a href="<?= htmlspecialchars($game['url_download_android']) ?>" target="_blank" class="btn btn-download">
                         <i class="fab fa-android"></i>
                         Android
                     </a>
                 <?php endif; ?>
 
-                <?php if (!empty($game['download_url'])): ?>
-                    <a href="<?= htmlspecialchars($game['download_url']) ?>" target="_blank" class="btn btn-secondary">
+                <?php if (!empty($game['url_download'])): ?>
+                    <a href="<?= htmlspecialchars($game['url_download']) ?>" target="_blank" class="btn btn-secondary">
                         <i class="fas fa-download"></i>
-                        Download Geral
+                        Download geral
                     </a>
                 <?php endif; ?>
             </div>
@@ -192,10 +192,10 @@ renderHeader($game['title']);
         </div>
     <?php endif; ?>
 
-    <?php if (!empty($game['screenshots'])): ?>
+    <?php if (!empty($game['capturas'])): ?>
         <div class="card" style="margin: 1rem 0;">
             <div class="card-content">
-                <?= displayScreenshots($game['screenshots'], $game['title'], $game['id'], false) ?>
+                <?= displayScreenshots($game['capturas'], $game['titulo'], $game['id'], false) ?>
             </div>
         </div>
     <?php endif; ?>
@@ -232,7 +232,7 @@ renderHeader($game['title']);
                 <i class="fas fa-info-circle"></i>
                 Descrição
             </h3>
-            <p><?= nl2br(htmlspecialchars($game['description'])) ?></p>
+            <p><?= nl2br(htmlspecialchars($game['descricao'])) ?></p>
         </div>
     </div>
 </div>

@@ -46,36 +46,7 @@ try {
     die("Erro na conexão com o banco de dados.");
 }
 
-// Cria colunas novas se não existirem (migração leve)
-function ensureGameColumns(PDO $pdo): void {
-    try {
-        $columns = $pdo->query("SHOW COLUMNS FROM games")->fetchAll(PDO::FETCH_COLUMN);
-        $need = [
-            'developer_name' => "ALTER TABLE games ADD COLUMN developer_name VARCHAR(255) NULL AFTER posted_by",
-            'languages_multi' => "ALTER TABLE games ADD COLUMN languages_multi TEXT NULL AFTER developer_name",
-            'updated_at_custom' => "ALTER TABLE games ADD COLUMN updated_at_custom DATE NULL AFTER languages_multi",
-            'released_at_custom' => "ALTER TABLE games ADD COLUMN released_at_custom DATE NULL AFTER updated_at_custom",
-            'patreon_url' => "ALTER TABLE games ADD COLUMN patreon_url VARCHAR(255) NULL AFTER released_at_custom",
-            'discord_url' => "ALTER TABLE games ADD COLUMN discord_url VARCHAR(255) NULL AFTER patreon_url",
-            'subscribestar_url' => "ALTER TABLE games ADD COLUMN subscribestar_url VARCHAR(255) NULL AFTER discord_url",
-            'itch_url' => "ALTER TABLE games ADD COLUMN itch_url VARCHAR(255) NULL AFTER subscribestar_url",
-            'kofi_url' => "ALTER TABLE games ADD COLUMN kofi_url VARCHAR(255) NULL AFTER itch_url",
-            'bmc_url' => "ALTER TABLE games ADD COLUMN bmc_url VARCHAR(255) NULL AFTER kofi_url",
-            'steam_url' => "ALTER TABLE games ADD COLUMN steam_url VARCHAR(255) NULL AFTER bmc_url",
-            'screenshots' => "ALTER TABLE games ADD COLUMN screenshots TEXT NULL AFTER steam_url"
-        ];
-        foreach ($need as $col => $ddl) {
-            if (!in_array($col, $columns, true)) {
-                $pdo->exec($ddl);
-            }
-        }
-    } catch (Throwable $e) {
-        // silencioso em prod; logar apenas
-        error_log('ensureGameColumns error: ' . $e->getMessage());
-    }
-}
-
-ensureGameColumns($pdo);
+// Estrutura do banco definida em /database/schema.sql
 
 // ====== FUNÇÕES DE AUTENTICAÇÃO MELHORADAS ======
 function isLoggedIn() { 
@@ -91,7 +62,7 @@ function requireLogin() {
 }
 
 function hasRole($roles) { 
-    return isLoggedIn() && in_array($_SESSION['user']['role'], (array)$roles); 
+    return isLoggedIn() && in_array($_SESSION['user']['papel'] ?? '', (array)$roles); 
 }
 
 function requireRole($roles) { 
@@ -673,8 +644,8 @@ function displayScreenshots($screenshots, $gameTitle = '', $gameId = '', $showTi
 
         $innerImg = ($ext === 'avif')
             ? "<picture><source type='image/avif' srcset='" . htmlspecialchars($displayPath, ENT_QUOTES, 'UTF-8') . "'>" .
-              "<img src='" . htmlspecialchars($fallback ?: $displayPath, ENT_QUOTES, 'UTF-8') . "' alt='" . htmlspecialchars($alt, ENT_QUOTES, 'UTF-8') . "' class='screenshot' loading='lazy' onload='this.classList.add(\"loaded\")' onerror='handleImageError(this)'></picture>"
-            : "<img src='" . htmlspecialchars($displayPath, ENT_QUOTES, 'UTF-8') . "' alt='" . htmlspecialchars($alt, ENT_QUOTES, 'UTF-8') . "' class='screenshot' loading='lazy' onload='this.classList.add(\"loaded\")' onerror='handleImageError(this)'>";
+              "<img src='" . htmlspecialchars($fallback ?: $displayPath, ENT_QUOTES, 'UTF-8') . "' alt='" . htmlspecialchars($alt, ENT_QUOTES, 'UTF-8') . "' class='screenshot' loading='lazy' onload='this.classList.add(\"loaded\")' onerror='" . handleImageError() . "'></picture>"
+            : "<img src='" . htmlspecialchars($displayPath, ENT_QUOTES, 'UTF-8') . "' alt='" . htmlspecialchars($alt, ENT_QUOTES, 'UTF-8') . "' class='screenshot' loading='lazy' onload='this.classList.add(\"loaded\")' onerror='" . handleImageError() . "'>";
 
         $html .= "<div class='screenshot-item' data-index='{$index}' onclick='openModal(this.querySelector(\"img.screenshot\"), {$index})'>" .
                  // data-full mantém o original; adicionamos também data-fallback para o modal
@@ -777,7 +748,7 @@ function displayDownloadLinks($downloadLinks, $requiresLogin = true) {
 function getTotalGames() {
     global $pdo;
     try {
-        $stmt = $pdo->query("SELECT COUNT(*) FROM games WHERE status = 'published'");
+        $stmt = $pdo->query("SELECT COUNT(*) FROM jogos");
         return $stmt->fetchColumn() ?: 0;
     } catch (PDOException $e) {
         error_log("Erro ao buscar total de jogos: " . $e->getMessage());
@@ -788,7 +759,7 @@ function getTotalGames() {
 function getTotalUsers() {
     global $pdo;
     try {
-        $stmt = $pdo->query("SELECT COUNT(*) FROM users WHERE status = 'active'");
+        $stmt = $pdo->query("SELECT COUNT(*) FROM usuarios WHERE status = 'active'");
         return $stmt->fetchColumn() ?: 0;
     } catch (PDOException $e) {
         error_log("Erro ao buscar total de usuários: " . $e->getMessage());

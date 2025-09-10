@@ -16,18 +16,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && validateCSRFToken($_POST['csrf_toke
     if (empty($errors)) {
         try {
             // atualiza nome
-            $stmt = $pdo->prepare("UPDATE users SET username = ? WHERE id = ?");
+            $stmt = $pdo->prepare("UPDATE usuarios SET nome_usuario = ? WHERE id = ?");
             $stmt->execute([$newName, $user['id']]);
             
             // atualiza senha se enviada
             if ($newPass) {
                 $hash = password_hash($newPass, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+                $stmt = $pdo->prepare("UPDATE usuarios SET senha_hash = ? WHERE id = ?");
                 $stmt->execute([$hash, $user['id']]);
             }
             
             // reflete na sessão
-            $_SESSION['user']['username'] = $newName;
+            $_SESSION['user']['nome_usuario'] = $newName;
             $success = "Perfil atualizado com sucesso!";
         } catch (PDOException $e) {
             $errors[] = "Erro ao salvar: " . $e->getMessage();
@@ -49,7 +49,7 @@ renderHeader('Meu perfil', 'Gerencie seus dados de usuário');
             <i class="fas fa-envelope"></i>
             <span><?= htmlspecialchars($user['email'] ?? '') ?></span>
             <span style="margin:0 .5rem;opacity:.5;">•</span>
-            <span class="role role-<?= htmlspecialchars($user['role']) ?>" style="font-weight:600;"><?= htmlspecialchars($user['role']) ?></span>
+            <span class="role role-<?= htmlspecialchars($user['papel']) ?>" style="font-weight:600;"><?= htmlspecialchars($user['papel']) ?></span>
         </div>
 
         <?php if (!empty($errors)): ?>
@@ -67,7 +67,7 @@ renderHeader('Meu perfil', 'Gerencie seus dados de usuário');
             
             <div class="form-group">
                 <label><i class="fas fa-user"></i> Nome de usuário</label>
-                <input type="text" name="username" value="<?= sanitize($user['username']); ?>" required>
+                <input type="text" name="username" value="<?= sanitize($user['nome_usuario']); ?>" required>
             </div>
 
             <div class="form-group">

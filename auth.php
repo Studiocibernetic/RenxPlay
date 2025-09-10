@@ -16,11 +16,11 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
     $password = $_POST['password'];
     
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
+    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE nome_usuario = ? OR email = ?");
     $stmt->execute([$username, $username]);
     $user = $stmt->fetch();
     
-    if ($user && password_verify($password, $user['password'])) {
+    if ($user && password_verify($password, $user['senha_hash'])) {
         $_SESSION['user'] = $user;
         header('Location: ' . ($_GET['redirect'] ?? 'index.php'));
         exit;
@@ -41,7 +41,7 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO usuarios (nome_usuario, email, senha_hash) VALUES (?, ?, ?)");
             $stmt->execute([$username, $email, $hashedPassword]);
             $message = "<div class='alert alert-success'><i class='fas fa-check'></i> Conta criada com sucesso! Faça login.</div>";
             $action = 'login';
@@ -80,13 +80,13 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
                 
-                <h2><?= $action === 'register' ? 'Entrar' : 'Entrar' ?></h2>
+                <h2><?= $action === 'register' ? 'Registrar' : 'Entrar' ?></h2>
                 <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1.5rem; font-size: 0.875rem;">
                     Entre com sua conta para continuar
                 </p>
                 
                 <div class="auth-tabs">
-                    <a href="?action=login" class="<?= $action === 'login' ? 'active' : '' ?>">Login</a>
+                    <a href="?action=login" class="<?= $action === 'login' ? 'active' : '' ?>">Entrar</a>
                     <a href="?action=register" class="<?= $action === 'register' ? 'active' : '' ?>">Registrar</a>
                 </div>
             </div>
