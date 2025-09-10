@@ -124,7 +124,7 @@ renderHeader($game['title']);
                     <?php if ($langs): ?>
                         <?= htmlspecialchars(implode(', ', $langs)) ?>
                     <?php else: ?>
-                        <?= htmlspecialchars($game['language'] ?? 'English') ?>
+                        <?= htmlspecialchars($game['language'] ?? 'Inglês') ?>
                     <?php endif; ?>
                 </p>
                 <?php if (!empty($game['developer_name'])): ?>

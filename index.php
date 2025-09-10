@@ -10,7 +10,7 @@ if ($gameSlug) {
     exit;
 }
 
-renderHeader('', 'Lista de jogos', 'jogos, renpy, visual novel');
+renderHeader('', 'Lista de jogos', 'jogos, renpy, romance visual');
 ?>
 
 <!-- Seção de busca -->
@@ -94,7 +94,7 @@ renderHeader('', 'Lista de jogos', 'jogos, renpy, visual novel');
                                 
                                 <div class="btn btn-sm btn-outline">
                                     <i class="fas fa-download"></i>
-                                    Download
+                                    Baixar
                                 </div>
                             </div>
                         </div>
@@ -133,7 +133,7 @@ renderHeader('', 'Lista de jogos', 'jogos, renpy, visual novel');
           results.innerHTML = games.map(game => 
             `<a href="game.php?slug=${game.slug}" style="display: block; padding: 0.75rem 1rem; text-decoration: none; color: hsl(var(--foreground)); border-bottom: 1px solid hsl(var(--border)); transition: background 0.2s;" onmouseover="this.style.background='hsl(var(--accent))'" onmouseout="this.style.background='transparent'">
                 <strong>${game.title}</strong><br>
-                <small style="color: hsl(var(--muted-foreground));">${game.category || 'Visual Novel'} • ${game.downloads_count || 0} downloads</small>
+                <small style="color: hsl(var(--muted-foreground));">${game.category || 'Romance Visual'} • ${game.downloads_count || 0} baixas</small>
             </a>`
           ).join('');
         }

@@ -49,7 +49,13 @@ renderHeader('Meu perfil', 'Gerencie seus dados de usuário');
             <i class="fas fa-envelope"></i>
             <span><?= htmlspecialchars($user['email'] ?? '') ?></span>
             <span style="margin:0 .5rem;opacity:.5;">•</span>
-            <span class="role role-<?= htmlspecialchars($user['role']) ?>" style="font-weight:600;"><?= htmlspecialchars($user['role']) ?></span>
+            <span class="role role-<?= htmlspecialchars($user['role']) ?>" style="font-weight:600;">
+                <?= htmlspecialchars(
+                    $user['role'] === 'DEV' ? 'DEV' : (
+                    $user['role'] === 'SUPER_ADMIN' ? 'SUPER ADMIN' : (
+                    $user['role'] === 'ADMIN' ? 'ADMIN' : 'USUÁRIO'))
+                ) ?>
+            </span>
         </div>
 
         <?php if (!empty($errors)): ?>

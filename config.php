@@ -49,6 +49,12 @@ try {
 // Cria colunas novas se não existirem (migração leve)
 function ensureGameColumns(PDO $pdo): void {
     try {
+        // Se "games" for uma VIEW (como no novo esquema em PT-BR), não tentar alterar
+        $t = $pdo->query("SELECT TABLE_TYPE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'games' LIMIT 1")->fetchColumn();
+        if (strtoupper((string)$t) === 'VIEW') {
+            return; // nada a fazer em VIEW
+        }
+
         $columns = $pdo->query("SHOW COLUMNS FROM games")->fetchAll(PDO::FETCH_COLUMN);
         $need = [
             'developer_name' => "ALTER TABLE games ADD COLUMN developer_name VARCHAR(255) NULL AFTER posted_by",
@@ -517,7 +523,7 @@ function renderHeader($title = '', $description = '', $keywords = '') {
     if (isLoggedIn() && hasRole(['ADMIN', 'SUPER_ADMIN', 'DEV'])) {
         echo "<a href='dashboard.php' class='nav-link " . ($currentPage === 'dashboard.php' ? 'active' : '') . "'>
                 <i class='fas fa-cog'></i>
-                Admin
+                Administração
             </a>";
     }
 
@@ -651,7 +657,7 @@ function displayScreenshots($screenshots, $gameTitle = '', $gameId = '', $showTi
     
     $html = "<div class='screenshots'>";
     if ($showTitle) {
-        $html .= "<h3><i class='fas fa-images'></i> Screenshots <span class='count'>(" . count($screenshots) . ")</span></h3>";
+        $html .= "<h3><i class='fas fa-images'></i> Capturas <span class='count'>(" . count($screenshots) . ")</span></h3>";
     }
     $html .= "<div class='screenshot-gallery' data-game-id='{$gameId}'>";
     
@@ -774,27 +780,7 @@ function displayDownloadLinks($downloadLinks, $requiresLogin = true) {
 }
 
 // ====== FUNÇÕES ESTATÍSTICAS ======
-function getTotalGames() {
-    global $pdo;
-    try {
-        $stmt = $pdo->query("SELECT COUNT(*) FROM games WHERE status = 'published'");
-        return $stmt->fetchColumn() ?: 0;
-    } catch (PDOException $e) {
-        error_log("Erro ao buscar total de jogos: " . $e->getMessage());
-        return 0;
-    }
-}
-
-function getTotalUsers() {
-    global $pdo;
-    try {
-        $stmt = $pdo->query("SELECT COUNT(*) FROM users WHERE status = 'active'");
-        return $stmt->fetchColumn() ?: 0;
-    } catch (PDOException $e) {
-        error_log("Erro ao buscar total de usuários: " . $e->getMessage());
-        return 0;
-    }
-}
+// removidas: getTotalGames e getTotalUsers não eram utilizadas
 
 // ====== FUNÇÕES DE PAGINAÇÃO ======
 function renderPagination($currentPage, $totalPages, $baseUrl = '', $params = [], $pageParam = 'p', $range = PAGINATION_RANGE) {
@@ -839,29 +825,9 @@ function renderPagination($currentPage, $totalPages, $baseUrl = '', $params = []
 }
 
 // ====== OUTRAS MELHORIAS ======
-function handleImageError($defaultImage = 'assets/no-image.png') {
-    return "this.src='{$defaultImage}'; this.onerror=null;";
-}
+// removido: tratamento de erro de imagem agora é feito no script.js
 
-function generateBreadcrumb($items) {
-    $html = "<nav class='breadcrumb' aria-label='Navegação estrutural'>";
-    $html .= "<ol class='breadcrumb-list'>";
-    
-    foreach ($items as $index => $item) {
-        $isLast = $index === count($items) - 1;
-        
-        if ($isLast) {
-            $html .= "<li class='breadcrumb-item active' aria-current='page'>{$item['title']}</li>";
-        } else {
-            $html .= "<li class='breadcrumb-item'>
-                        <a href='{$item['url']}'>{$item['title']}</a>
-                      </li>";
-        }
-    }
-    
-    $html .= "</ol></nav>";
-    return $html;
-}
+// removida: generateBreadcrumb não era utilizada
 
 // ====== CSRF TOKEN HELPER ======
 function csrfField() {

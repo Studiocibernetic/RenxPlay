@@ -246,7 +246,7 @@ if ($action === 'delete_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - <?= SITE_NAME ?></title>
+    <title>Painel Administrativo - <?= SITE_NAME ?></title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="https://i.imgur.com/QyZKduC.png" type="image/png">
@@ -267,7 +267,7 @@ if ($action === 'delete_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 <a href="dashboard.php" class="nav-link active">
                     <i class="fas fa-cog"></i>
-                    Admin
+                    Administração
                 </a>
                 
                 <div class="user-dropdown">
@@ -297,12 +297,12 @@ if ($action === 'delete_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Conteúdo principal -->
     <div class="container">
         <div class="admin-header">
-            <h1>Admin Dashboard</h1>
+            <h1>Painel Administrativo</h1>
             
             <?php if ($action === 'home'): ?>
                 <a href="?action=create_game" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
-                    Add Game
+                    Adicionar Jogo
                 </a>
             <?php endif; ?>
         </div>
@@ -359,7 +359,7 @@ if ($action === 'delete_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="admin-card-footer">
                                 <a href="?action=edit_game&id=<?= $game['id'] ?>" class="btn btn-sm btn-outline">
                                     <i class="fas fa-edit"></i>
-                                    Edit
+                                    Editar
                                 </a>
                                 
                                 <form method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir este jogo?')">
@@ -367,7 +367,7 @@ if ($action === 'delete_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="hidden" name="game_id" value="<?= $game['id'] ?>">
                                     <button type="submit" class="btn btn-sm" style="background: hsl(0 84% 60%); color: white; border-color: hsl(0 84% 60%);">
                                         <i class="fas fa-trash"></i>
-                                        Delete
+                                        Excluir
                                     </button>
                                 </form>
                             </div>
@@ -390,7 +390,7 @@ if ($action === 'delete_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card-content">
                     <h2 style="margin-bottom: 1.5rem;">
                         <i class="fas fa-plus"></i>
-                        Create New Game
+                        Criar Novo Jogo
                     </h2>
                     
                     <form method="POST" enctype="multipart/form-data">
@@ -404,7 +404,7 @@ if ($action === 'delete_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                             
                             <div class="form-group">
-                                <label for="engine">Engine</label>
+                                <label for="engine">Motor</label>
                                 <select id="engine" name="engine" required>
                                     <option value="REN'PY" <?= ($_POST['engine'] ?? '') === "REN'PY" ? 'selected' : '' ?>>REN'PY</option>
                                     <option value="UNITY" <?= ($_POST['engine'] ?? '') === 'UNITY' ? 'selected' : '' ?>>Unity</option>
@@ -558,8 +558,8 @@ if ($action === 'delete_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="form-group">
                             <label for="tags">Tags (separadas por vírgula)</label>
                             <input type="text" id="tags" name="tags" 
-                                   placeholder="Adult,Visual Novel" 
-                                   value="<?= htmlspecialchars($_POST['tags'] ?? 'Adult,Visual Novel') ?>">
+                                   placeholder="Adulto,Romance Visual" 
+                                   value="<?= htmlspecialchars($_POST['tags'] ?? 'Adulto,Romance Visual') ?>">
                         </div>
                         
                         <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
@@ -585,7 +585,7 @@ if ($action === 'delete_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input type="hidden" name="game_id" value="<?= $eg['id'] ?>">
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
                             <div class="form-group"><label>Título</label><input type="text" name="title" value="<?= htmlspecialchars($eg['title']) ?>"/></div>
-                            <div class="form-group"><label>Engine</label>
+                            <div class="form-group"><label>Motor</label>
                                 <select name="engine">
                                     <option value="REN'PY" <?= $eg['engine']==="REN'PY"?'selected':'' ?>>REN'PY</option>
                                     <option value="UNITY" <?= $eg['engine']==='UNITY'?'selected':'' ?>>UNITY</option>
@@ -728,7 +728,7 @@ if ($action === 'delete_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="form-group">
                             <label for="tags">Tags (separadas por vírgula)</label>
                             <input type="text" id="tags" name="tags"
-                                   placeholder="Adult,Visual Novel"
+                                   placeholder="Adulto,Romance Visual"
                                    value="<?= htmlspecialchars($eg['tags'] ?? '') ?>">
                         </div>
 

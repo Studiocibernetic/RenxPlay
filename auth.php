@@ -80,7 +80,7 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
                 
-                <h2><?= $action === 'register' ? 'Entrar' : 'Entrar' ?></h2>
+                <h2><?= $action === 'register' ? 'Registrar' : 'Entrar' ?></h2>
                 <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1.5rem; font-size: 0.875rem;">
                     Entre com sua conta para continuar
                 </p>

@@ -181,6 +181,20 @@ window.addEventListener('click', (e) => {
         if (dropdown) dropdown.classList.remove('show');
     }
 });
+// ====== TRATAMENTO DE ERRO DE IMAGEM ======
+function handleImageError(imgEl) {
+    if (!imgEl) return;
+    const fallback = imgEl.getAttribute('data-fallback');
+    if (fallback) {
+        imgEl.onerror = null;
+        imgEl.src = fallback;
+        return;
+    }
+    imgEl.onerror = null;
+    // 1x1 GIF transparente para evitar dependência de arquivo externo
+    imgEl.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='
+}
+
 
 // ====== PREVIEW DE IMAGENS ======
 function preview(inpId, outId, multi = false) {
